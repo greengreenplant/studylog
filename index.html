@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StudyLog</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+    h1 { margin: 0 0 12px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
+    label { font-size: 12px; color: #555; display: block; margin-bottom: 6px; }
+    input, select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; }
+    button { cursor: pointer; }
+    .hint { margin-top: 10px; color: #777; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>StudyLog</h1>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="date">날짜</label>
+        <input type="date" id="date" />
+      </div>
+      <div>
+        <label for="subject">과목</label>
+        <select id="subject">
+          <option value="웹">웹</option>
+          <option value="자바(교육자료)">자바(교육자료)</option>
+          <option value="안드로이드">안드로이드</option>
+          <option value="알고리즘">알고리즘</option>
+          <option value="영어">영어</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div>
+        <label for="minutes">공부 시간(분)</label>
+        <input type="number" id="minutes" min="1" step="1" placeholder="예: 60" />
+      </div>
+      <div>
+        <button id="addBtn">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ script 밖, body 안으로 이동 -->
+  <ul id="logList"></ul>
+
+  <script>
+    const dateEl = document.getElementById('date');
+    const subjectEl = document.getElementById('subject');
+    const minutesEl = document.getElementById('minutes');
+    const addBtn = document.getElementById('addBtn');
+    const logList = document.getElementById('logList');
+
+    const logs = [];
+
+    // ✅ render()를 클릭 핸들러 밖으로 꺼내기
+    function render() {
+  logList.innerHTML = '';
+
+  logs.forEach(log => {
+    const li = document.createElement('li');
+
+    const text = document.createElement('span');
+    text.innerText = `${log.date} | ${log.subject} | ${log.minutes}분 `;
+
+    const delBtn = document.createElement('button');
+    delBtn.innerText = '삭제';
+
+    delBtn.addEventListener('click', () => {
+      deleteLog(log.id);
+    });
+
+    li.appendChild(text);
+    li.appendChild(delBtn);
+
+    logList.appendChild(li);
+  });
+}
+    function deleteLog(id) {
+  const index = logs.findIndex(log => log.id === id);
+
+  if (index !== -1) {
+    logs.splice(index, 1);
+    render();
+  }
+}
+
+    addBtn.addEventListener('click', () => {
+      const log = {
+        id: Date.now(),
+        date: dateEl.value,
+        subject: subjectEl.value,
+        minutes: Number(minutesEl.value)
+      };
+      logs.push(log);
+      render(); // ✅ 추가 후 render 호출
+    });
+
+    dateEl.value = new Date().toISOString().slice(0, 10);
+  </script>
+</body>
+</html>
