@@ -5,18 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>StudyLog</title>
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }
-    h1 { margin: 0 0 12px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; }
-    .row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
-    label { font-size: 12px; color: #555; display: block; margin-bottom: 6px; }
-    input, select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; }
-    button { cursor: pointer; }
-    .hint { margin-top: 10px; color: #777; font-size: 13px; }
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 0 16px;
+      background: #f7f8fc;
+      color: #222;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      margin-bottom: 24px;
+      color: #666;
+      font-size: 15px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      margin-bottom: 20px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    label {
+      font-size: 13px;
+      color: #555;
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      font-weight: 600;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    #totalTime {
+      margin: 0 0 16px;
+      font-size: 18px;
+    }
+
+    #logList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #logList li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    }
+
+    #logList li span {
+      font-size: 14px;
+      color: #333;
+    }
+
+    #logList li button {
+      width: auto;
+      padding: 8px 14px;
+      background: #ef4444;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    #logList li button:hover {
+      background: #dc2626;
+    }
+
+    .empty {
+      text-align: center;
+      color: #888;
+      padding: 24px 0;
+      font-size: 14px;
+      display: block;
+    }
+
+    @media (max-width: 720px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>StudyLog</h1>
+  <p class="subtitle">공부 기록을 남기고 학습 습관을 관리하는 간단한 스터디 로그</p>
 
   <div class="card">
     <div class="row">
@@ -45,7 +170,7 @@
     </div>
   </div>
 
-  <!-- ✅ script 밖, body 안으로 이동 -->
+  <h3 id="totalTime">총 공부시간: 0분</h3>
   <ul id="logList"></ul>
 
   <script>
@@ -55,52 +180,70 @@
     const addBtn = document.getElementById('addBtn');
     const logList = document.getElementById('logList');
 
-    const logs = [];
+    let logs = JSON.parse(localStorage.getItem('logs')) || [];
 
-    // ✅ render()를 클릭 핸들러 밖으로 꺼내기
     function render() {
-  logList.innerHTML = '';
+      logList.innerHTML = '';
 
-  logs.forEach(log => {
-    const li = document.createElement('li');
+      const total = logs.reduce((sum, log) => sum + log.minutes, 0);
+      document.getElementById('totalTime').innerText = `총 공부시간: ${total}분`;
 
-    const text = document.createElement('span');
-    text.innerText = `${log.date} | ${log.subject} | ${log.minutes}분 `;
+      if (logs.length === 0) {
+        logList.innerHTML = '<li class="empty">아직 기록이 없습니다. 첫 공부 기록을 추가해보세요.</li>';
+        localStorage.setItem('logs', JSON.stringify(logs));
+        return;
+      }
 
-    const delBtn = document.createElement('button');
-    delBtn.innerText = '삭제';
+      logs.forEach(log => {
+        const li = document.createElement('li');
 
-    delBtn.addEventListener('click', () => {
-      deleteLog(log.id);
-    });
+        const text = document.createElement('span');
+        text.innerText = `${log.date} | ${log.subject} | ${log.minutes}분`;
 
-    li.appendChild(text);
-    li.appendChild(delBtn);
+        const delBtn = document.createElement('button');
+        delBtn.innerText = '삭제';
 
-    logList.appendChild(li);
-  });
-}
+        delBtn.addEventListener('click', () => {
+          deleteLog(log.id);
+        });
+
+        li.appendChild(text);
+        li.appendChild(delBtn);
+        logList.appendChild(li);
+      });
+
+      localStorage.setItem('logs', JSON.stringify(logs));
+    }
+
     function deleteLog(id) {
-  const index = logs.findIndex(log => log.id === id);
+      const index = logs.findIndex(log => log.id === id);
 
-  if (index !== -1) {
-    logs.splice(index, 1);
-    render();
-  }
-}
+      if (index !== -1) {
+        logs.splice(index, 1);
+        render();
+      }
+    }
 
     addBtn.addEventListener('click', () => {
+      if (!dateEl.value || !minutesEl.value) {
+        alert('날짜와 공부 시간을 입력해주세요.');
+        return;
+      }
+
       const log = {
         id: Date.now(),
         date: dateEl.value,
         subject: subjectEl.value,
         minutes: Number(minutesEl.value)
       };
+
       logs.push(log);
-      render(); // ✅ 추가 후 render 호출
+      minutesEl.value = '';
+      render();
     });
 
     dateEl.value = new Date().toISOString().slice(0, 10);
+    render();
   </script>
 </body>
 </html>
